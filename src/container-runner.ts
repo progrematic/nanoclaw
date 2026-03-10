@@ -17,7 +17,11 @@ import {
   TIMEZONE,
 } from './config.js';
 import { resolveGroupFolderPath, resolveGroupIpcPath } from './group-folder.js';
+import { readEnvFile } from './env.js';
 import { logger } from './logger.js';
+
+// Read integration env vars from .env once at startup
+const integrationEnv = readEnvFile(['HA_URL', 'HA_TOKEN']);
 import {
   CONTAINER_HOST_GATEWAY,
   CONTAINER_RUNTIME_BIN,
@@ -236,6 +240,11 @@ function buildContainerArgs(
     args.push('-e', 'ANTHROPIC_API_KEY=placeholder');
   } else {
     args.push('-e', 'CLAUDE_CODE_OAUTH_TOKEN=placeholder');
+  }
+
+  // Pass integration env vars (e.g. Home Assistant credentials)
+  for (const [key, value] of Object.entries(integrationEnv)) {
+    if (value) args.push('-e', `${key}=${value}`);
   }
 
   // Runtime-specific args for host gateway resolution
